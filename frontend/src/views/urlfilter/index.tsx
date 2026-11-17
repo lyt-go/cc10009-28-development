@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { request } from '@/api/client'
+import RangeConsumePanel from '@/components/RangeConsumePanel'
 
 const ENDPOINT = '/api/urlfilter'
 const columns = [
@@ -152,6 +153,8 @@ export default function UrlfilterView() {
           )}
         </tbody>
       </table>
+
+      <RangeConsumePanel consumer="urlfilter" title="翻页范围消费清单（URL过滤侧）" />
 
       <footer className="page-foot">
         <span>共 {total} 条URL过滤记录</span>

@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from app.schemas import ActionResult, EntryPayload, PageResult
+from app.services.pagerange import pagerange_service
 from app.services.urlfilter import UrlfilterService
 
 router = APIRouter(prefix="/api/urlfilter", tags=["URL过滤"])
@@ -14,6 +15,25 @@ service = UrlfilterService()
 
 LIST_FIELDS = ["规则编号", "包含模式", "排除模式", "域名白名单", "路径黑名单", "参数剥离规则", "大小写处理", "尾部斜杠策略"]
 STATUSES = ["草稿", "规则评审中", "已生效", "已废弃"]
+
+
+@router.get("/range-manifest")
+def range_manifest() -> dict[str, Any]:
+    """URL过滤侧翻页范围消费清单：本侧与抓取侧回执同源，对侧消费后本清单跟着变化。"""
+    return pagerange_service.manifest("urlfilter")
+
+
+@router.post("/consume-range", response_model=ActionResult)
+def consume_range(payload: EntryPayload) -> ActionResult:
+    """消费一份可重放翻页采集范围：只对去重后的页面发起抓取；重复消费返回原回执，不生成第二份。"""
+    receipt, pages, created, message = pagerange_service.consume(
+        str(payload.values.get("范围编号") or ""),
+        "urlfilter",
+        job_code=str(payload.values.get("作业编号") or "") or None,
+    )
+    if receipt is None:
+        return ActionResult(ok=False, message=message)
+    return ActionResult(ok=True, message=message, entry={"回执": receipt, "去重后页面": pages, "是否新回执": created})
 
 
 @router.get("", response_model=PageResult[dict])

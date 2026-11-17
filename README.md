@@ -61,6 +61,7 @@ npm run dev
 | 带宽控制 | `bandwidth` | 带宽策略 | 策略编号、节点标识、下载带宽上限 |
 | 重试队列 | `retryqueue` | 重试条目 | 条目编号、失败URL、失败原因码 |
 | 翻页管理 | `pagemarker` | 翻页规则 | 规则编号、目标站点、翻页类型 |
+| 翻页范围 | `pagerange` | 可重放翻页采集范围 | 范围编号、规则版本、终止依据 |
 | 增量标记 | `incrementmark` | 增量水位 | 水位编号、目标源、增量字段名 |
 | 配置同步 | `configsync` | 同步任务 | 任务编号、源节点、目标节点 |
 | 采集API | `scrapeapi` | API定义 | API编号、API名称、请求路径 |
@@ -73,6 +74,9 @@ npm run dev
   `backend/app/routers/<模块>.py`，业务规则在 `backend/app/services/<模块>.py`。
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
+- 翻页范围（`pagerange`）由翻页规则计算生成：同一查询条件重复计算命中同一范围；
+  规则换版后旧范围保留给旧作业，新范围扩页需确认；URL过滤与抓取作业凭幂等回执消费，
+  两侧消费清单同源联动。自检脚本：`cd backend && .venv/bin/python tests/pagerange_selfcheck.py`。
 
 领域：数据工程
 子方向：数据采集、爬虫与RPA

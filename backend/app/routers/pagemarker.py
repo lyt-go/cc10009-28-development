@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/pagemarker", tags=["翻页管理"])
 
 service = PagemarkerService()
 
-LIST_FIELDS = ["规则编号", "目标站点", "翻页类型", "起始页码", "最大页码", "页码参数名", "偏移量参数", "总条数定位器"]
+LIST_FIELDS = ["规则编号", "目标站点", "翻页类型", "起始页码", "最大页码", "页码参数名", "偏移量参数", "总条数定位器", "页大小", "规则版本"]
 STATUSES = ["草稿", "规则验证中", "已启用", "已废弃"]
 
 
@@ -50,7 +50,7 @@ def create_entry(payload: EntryPayload) -> ActionResult:
 
 @router.post("/{entry_id}/actions", response_model=ActionResult)
 def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
-    """对单条翻页规则执行提交规则验证、启用规则、废弃规则；不允许的动作会被拦下并说明原因。"""
+    """对单条翻页规则执行提交规则验证、启用规则、废弃规则、规则换版；不允许的动作会被拦下并说明原因。"""
     action = str(payload.values.get("action") or "").strip()
     entry, message = service.run_action(entry_id, action)
     if entry is None:

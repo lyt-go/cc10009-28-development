@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.schemas import ActionResult, EntryPayload, PageResult
 from app.services.crawljob import CrawljobService
+from app.services.pagerange import pagerange_service
 
 router = APIRouter(prefix="/api/crawljob", tags=["抓取作业"])
 
@@ -14,6 +15,25 @@ service = CrawljobService()
 
 LIST_FIELDS = ["作业编号", "目标站点", "起始URL", "爬取深度", "URL去重策略", "页面解析器", "下载超时秒", "最大页面数"]
 STATUSES = ["草稿", "作业审批中", "执行中", "已完成", "已停止"]
+
+
+@router.get("/range-manifest")
+def range_manifest() -> dict[str, Any]:
+    """抓取消费侧翻页范围清单：结果版本随消费回执同步进清单，确认范围已被消费。"""
+    return pagerange_service.manifest("crawljob")
+
+
+@router.post("/consume-range", response_model=ActionResult)
+def consume_range(payload: EntryPayload) -> ActionResult:
+    """消费一份可重放翻页采集范围：只对去重后的页面发起抓取；并发回执不会多出第二份结果。"""
+    receipt, pages, created, message = pagerange_service.consume(
+        str(payload.values.get("范围编号") or ""),
+        "crawljob",
+        job_code=str(payload.values.get("作业编号") or "") or None,
+    )
+    if receipt is None:
+        return ActionResult(ok=False, message=message)
+    return ActionResult(ok=True, message=message, entry={"回执": receipt, "去重后页面": pages, "是否新回执": created})
 
 
 @router.get("", response_model=PageResult[dict])

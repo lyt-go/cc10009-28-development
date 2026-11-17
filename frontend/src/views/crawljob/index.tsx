@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { request } from '@/api/client'
+import RangeConsumePanel from '@/components/RangeConsumePanel'
 
 const ENDPOINT = '/api/crawljob'
 const columns = [
@@ -153,6 +154,8 @@ export default function CrawljobView() {
           )}
         </tbody>
       </table>
+
+      <RangeConsumePanel consumer="crawljob" title="翻页范围消费清单（抓取消费侧）" />
 
       <footer className="page-foot">
         <span>共 {total} 条抓取作业记录</span>
